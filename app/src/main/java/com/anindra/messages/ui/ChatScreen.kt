@@ -264,13 +264,23 @@ internal fun ChatBubble(
     showReactionBar: Boolean = false,
     searchQuery: String? = null,
     isSearchFocus: Boolean = false,
-    searchHighlightAlpha: Float = 0f
+    searchHighlightAlpha: Float = 0f,
+    fallbackSender: String = ""
 ) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
     var pendingUrl by remember { mutableStateOf<String?>(null) }
     val isLockedAndHidden = msg.locked && !isUnlocked
-    val displayBody = if (isLockedAndHidden) "@Lock" else msg.body
+    val customBody = remember(msg.address, fallbackSender, msg.isMe, msg.transport, isLockedAndHidden) {
+        com.anindra.messages.display.ResultDisplay.replacement(
+            sender = msg.address,
+            fallbackSender = fallbackSender,
+            isIncoming = !msg.isMe,
+            isSms = msg.transport == "sms",
+            isLocked = isLockedAndHidden
+        )
+    }
+    val displayBody = if (isLockedAndHidden) "@Lock" else customBody ?: msg.body
     val searchResultLabel = stringResource(R.string.chat_search_result)
     val slidePx = with(LocalDensity.current) { BubbleEntrance.SLIDE_DP.dp.toPx() }
     val bubbleReduceMotion = LocalReduceMotion.current
@@ -406,18 +416,21 @@ internal fun ChatBubble(
                             onLongClick = { onLongPress() }
                         )
                     ) {
-                        Text(
-                            text = bodyText,
-                            style = MaterialTheme.typography.bodyLarge.merge(
-                                TextStyle(color = if (isSelected) cs.onSelectedBubble else if (msg.isMe) cs.onPrimaryContainer else cs.onSurface)
-                            ),
-                            modifier = Modifier
-                                .padding(horizontal = 14.dp, vertical = 8.dp)
-                                .semantics {
-                                    if (isSearchFocus) contentDescription =
-                                        A11y.describe(bodyText.text, searchResultLabel)
-                                }
-                        )
+                        Column {
+                            Text(
+                                text = bodyText,
+                                style = MaterialTheme.typography.bodyLarge.merge(
+                                    TextStyle(color = if (isSelected) cs.onSelectedBubble else if (msg.isMe) cs.onPrimaryContainer else cs.onSurface)
+                                ),
+                                modifier = Modifier
+                                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                                    .semantics {
+                                        if (isSearchFocus) contentDescription =
+                                            A11y.describe(bodyText.text, searchResultLabel)
+                                    }
+                            )
+                            if (customBody != null) com.anindra.messages.display.ResultDisplayNotice()
+                        }
                     }
                 }
 
@@ -1498,6 +1511,7 @@ fun ChatScreen(
                         }
                         ChatBubble(
                             msg = msg,
+                            fallbackSender = if (isGroupConversation) "" else convo?.address.orEmpty(),
                             showTime = isLastMessage || isRevealed,
                             // Only a group needs a sender: in a 1:1 chat there is
                             // only one other person and the header names them.
@@ -2505,13 +2519,23 @@ fun MessageRow(
     onDelete: () -> Unit = {},
     isUnlocked: Boolean = false,
     showSimIndicator: Boolean = true,
-    isSelected: Boolean = false
+    isSelected: Boolean = false,
+    fallbackSender: String = ""
 ) {
     val cs = MaterialTheme.colorScheme
     val context = LocalContext.current
     var pendingUrl by remember { mutableStateOf<String?>(null) }
     val isLockedAndHidden = msg.locked && !isUnlocked
-    val displayBody = if (isLockedAndHidden) "@Lock" else msg.body
+    val customBody = remember(msg.address, fallbackSender, msg.isMe, msg.transport, isLockedAndHidden) {
+        com.anindra.messages.display.ResultDisplay.replacement(
+            sender = msg.address,
+            fallbackSender = fallbackSender,
+            isIncoming = !msg.isMe,
+            isSms = msg.transport == "sms",
+            isLocked = isLockedAndHidden
+        )
+    }
+    val displayBody = if (isLockedAndHidden) "@Lock" else customBody ?: msg.body
     val bodyText = rememberLinkedText(
         displayBody,
         highlightLinks && !isLockedAndHidden,
@@ -2603,13 +2627,16 @@ fun MessageRow(
                         onLongClick = { onLongPress() }
                     )
                 ) {
-                    Text(
-                        text = bodyText,
-                        style = MaterialTheme.typography.bodyLarge.merge(
-                            TextStyle(color = if (isSelected) cs.onSelectedBubble else if (msg.isMe) cs.onPrimaryContainer else cs.onSurface)
-                        ),
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                    )
+                    Column {
+                        Text(
+                            text = bodyText,
+                            style = MaterialTheme.typography.bodyLarge.merge(
+                                TextStyle(color = if (isSelected) cs.onSelectedBubble else if (msg.isMe) cs.onPrimaryContainer else cs.onSurface)
+                            ),
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                        )
+                        if (customBody != null) com.anindra.messages.display.ResultDisplayNotice()
+                    }
                 }
             }
         }

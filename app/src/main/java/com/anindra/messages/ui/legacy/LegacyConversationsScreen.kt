@@ -753,7 +753,16 @@ internal fun ConversationRow(
     )
     val hasDraft = settings.draftsEnabled && convo.draft.isNotBlank()
     val draftLabel = if (settings.hideLinks) hideUrls(convo.draft) else convo.draft
-    val snippetLabel = if (settings.hideLinks) hideUrls(convo.snippet) else convo.snippet
+    val customSnippet = remember(convo.address, convo.isMe, convo.groupTitle) {
+        com.anindra.messages.display.ResultDisplay.replacement(
+            sender = convo.address,
+            isIncoming = !convo.isMe && convo.groupTitle.isBlank()
+        )
+    }
+    val visibleSnippet = if (customSnippet != null) {
+        context.getString(R.string.result_display_custom) + " · " + customSnippet
+    } else convo.snippet
+    val snippetLabel = if (settings.hideLinks) hideUrls(visibleSnippet) else visibleSnippet
     val scheduledLabel = LocalScheduledPreview.current[convo.id]
     val previewLabel = BidiText.isolateNumberRuns(
         if (hasDraft) {
