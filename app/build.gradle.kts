@@ -18,6 +18,7 @@ android {
         targetSdk = 36
         versionCode = 32
         versionName = "1.0.29"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     // RELEASE_KEYSTORE lets a throwaway key stand in for a side build without
@@ -91,7 +92,13 @@ dependencies {
     implementation(libs.libphone)
     implementation(libs.coil.compose)
     debugImplementation(libs.androidx.ui.tooling)
+    implementation("com.google.re2j:re2j:1.8")
     testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Test-only: production still sends through the vendored stack. This is
     // what lets the interop test prove the two stacks read each other's PDUs

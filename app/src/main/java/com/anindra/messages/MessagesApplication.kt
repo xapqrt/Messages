@@ -14,6 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 class MessagesApplication : Application() {
+    val forwarding by lazy { com.anindra.messages.forwarding.ForwardingRuntime(this) }
     lateinit var repository: Repository
         private set
 
@@ -33,6 +34,10 @@ class MessagesApplication : Application() {
             startupSettings.periodicBackupInterval
         )
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            runCatching {
+                val config = forwarding.load()
+                com.anindra.messages.forwarding.ForwardingHealthWorker.schedule(this@MessagesApplication, config.enabled)
+            }
             repository.migrateParticipants()
             val s = repository.settings
             if (BackupHealth.isRetryDue(s.periodicBackupEnabled, s.lastBackupAt, s.lastBackupOk)) {

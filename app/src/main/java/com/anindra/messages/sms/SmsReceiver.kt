@@ -17,8 +17,8 @@ import kotlinx.coroutines.launch
 class SmsReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Telephony.Sms.Intents.SMS_DELIVER_ACTION &&
-            intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
+        if (intent.action != Telephony.Sms.Intents.SMS_DELIVER_ACTION) return
+        if (Telephony.Sms.getDefaultSmsPackage(context) != context.packageName) return
 
         val pendingResult = goAsync()
         val wakeLock = ReceiverWakeLock.acquire(context, "sms-incoming")
@@ -48,17 +48,16 @@ class SmsReceiver : BroadcastReceiver() {
         // own message + notification.
         val msgs = Telephony.Sms.Intents.getMessagesFromIntent(intent)
             .filter { it.originatingAddress != null && !it.messageBody.isNullOrEmpty() }
-        val subId: Int = run {
-            val fromIntent = intent.getIntExtra("subscription", -1)
-            if (fromIntent > 0) return@run fromIntent
-            val fromExtra = intent.getIntExtra("android.telephony.extra.SUBSCRIPTION_INDEX", -1)
-            if (fromExtra > 0) return@run fromExtra
-            val fromPhone = intent.getIntExtra("phone", -1)
-            if (fromPhone > 0) return@run fromPhone
-            val fromSim = intent.getIntExtra("simId", -1)
-            if (fromSim > 0) return@run fromSim
-            -1
-        }
+        val subscriptions = try {
+            context.getSystemService(android.telephony.SubscriptionManager::class.java).activeSubscriptionInfoList.orEmpty()
+        } catch (_: SecurityException) { emptyList() }
+        val deliveredSlot = intent.getIntExtra("slot", intent.getIntExtra("phone", -1))
+        val subId = com.anindra.messages.forwarding.IncomingSim.subscription(
+            intent.getIntExtra("subscription", -1),
+            intent.getIntExtra("android.telephony.extra.SUBSCRIPTION_INDEX", -1),
+            deliveredSlot, subscriptions.associate { it.simSlotIndex to it.subscriptionId }
+        )
+        val simSlot = subscriptions.firstOrNull { it.subscriptionId == subId }?.simSlotIndex ?: deliveredSlot
         for ((address, parts) in msgs.groupBy { it.originatingAddress!! }) {
             val body = MessageBody.normalize(parts.joinToString("") { it.messageBody!! })
 
@@ -108,7 +107,17 @@ class SmsReceiver : BroadcastReceiver() {
             val inForeground = ForegroundTracker.isAppInForeground
             val threadOpen = ForegroundTracker.isConversationOpen(address)
             val counts = NotificationPolicy.countsAsUnread(inForeground, threadOpen)
-            repo.receiveMessage(address, body, sysId, subId, markUnread = counts)
+            val retained = com.anindra.messages.forwarding.IncomingSmsPipeline.deliver(
+                isDefault = isDefaultHandler,
+                persist = { repo.receiveMessage(address, body, sysId, subId, markUnread = counts) },
+                forward = {
+                    com.anindra.messages.forwarding.ForwardingRuntime.get(context).incoming(
+                        com.anindra.messages.forwarding.IncomingSms(address, body, parts.first().timestampMillis, subId, simSlot)
+                    )
+                },
+                onForwardError = { android.util.Log.w("SmsReceiver", "Forwarding unavailable; original retained") }
+            )
+            if (!retained) continue
             if (NotificationPolicy.skipForOpenThread(inForeground, threadOpen)) continue
             NotificationHelper.show(context, address, body)
         }

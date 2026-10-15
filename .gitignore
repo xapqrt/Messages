@@ -21,3 +21,8 @@ demo.keystore
 
 # throwaway key for local demo/personal builds
 demo-sign.keystore
+
+# Owner-managed signing material must never enter source control.
+*.jks
+*.keystore
+*.p12
