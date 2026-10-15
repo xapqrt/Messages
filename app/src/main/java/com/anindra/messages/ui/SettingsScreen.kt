@@ -98,6 +98,7 @@ fun SettingsScreen(
     onOpenSpamBlocked: () -> Unit = {},
     onOpenInbox: () -> Unit = {},
     onOpenScheduled: () -> Unit = {},
+    onOpenForwarding: () -> Unit = {},
     scrollState: ScrollState = rememberScrollState()
 ) {
     BackHandler(onBack = onBack)
@@ -238,6 +239,9 @@ fun SettingsScreen(
                 .padding(horizontal = SettingsLayout.SCREEN_PADDING)
         ) {
             Spacer(Modifier.height(SettingsLayout.TOP_GAP))
+            TextButton(onClick = onOpenForwarding, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.forward_title))
+            }
 
             SettingsGroup {
                 SettingsRow(

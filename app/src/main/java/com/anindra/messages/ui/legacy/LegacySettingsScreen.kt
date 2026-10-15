@@ -115,6 +115,7 @@ fun SettingsScreen(
     onOpenAdvanced: () -> Unit = {},
     onOpenSpamBlocked: () -> Unit = {},
     onOpenScheduled: () -> Unit = {},
+    onOpenForwarding: () -> Unit = {},
     onOpenRoute: (String) -> Unit = {},
     onOpenJumpTarget: (Int) -> Unit = {},
     scrollState: ScrollState = rememberScrollState()
@@ -348,6 +349,9 @@ fun SettingsScreen(
         ) {
             Spacer(Modifier.height(8.dp))
 
+        TextButton(onClick = onOpenForwarding, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.forward_title))
+        }
         SettingsCard(0) {
                 SettingsRow(
                     title = stringResource(R.string.settings_notif_title),

@@ -1009,6 +1009,7 @@ class MainActivity : FragmentActivity() {
         }
         applyPrivacyModeProbe(intent, bootVm)
         if (intent.getBooleanExtra("open_settings", false)) navRoute = "settings"
+        if (intent.getBooleanExtra("open_forwarding", false)) navRoute = "forwarding"
         intent.getStringExtra("open_conversation_address")?.let {
             pendingOpenAddress = it
             com.anindra.messages.sms.NotificationHelper.clearConversationNotification(
@@ -1237,6 +1238,7 @@ class MainActivity : FragmentActivity() {
                         "details" -> navRoute = "chat"
                         "add-people" -> navRoute = "details"
                         "transfer-log" -> navRoute = "advanced"
+                        "forwarding" -> navRoute = "settings"
                         "trash" -> navRoute = "settings"
                         "inbox" -> navRoute = "settings"
                         "notif-settings" -> navRoute = "advanced"
@@ -1251,37 +1253,48 @@ class MainActivity : FragmentActivity() {
 
                 val routeDepth = mapOf("list" to 0, "opening" to 0, "chat" to 1, "details" to 2, "new" to 1, "settings" to 1, "trash" to 2, "spam" to 2, "inbox" to 2, "advanced" to 2, "accessibility" to 3,
                         "notif-settings" to 3, "auto-delete" to 3, "links" to 3,
-                        "transfer-log" to 3,
+                        "transfer-log" to 3, "forwarding" to 2,
                         "add-people" to 3, "mms-check" to 3, "scheduled" to 2)
                 val reduceMotion = vm.a11y.reduceMotionEnabled
                 val navSlide = motionTween<IntOffset>(reduceMotion, Motion.DURATION_MEDIUM2)
                 val navFade = motionTween<Float>(reduceMotion, Motion.DURATION_SHORT4)
 
+                val forwardingVm: com.anindra.messages.forwarding.ForwardingViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                val forwardingState by forwardingVm.state.collectAsState()
+                androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { forwardingVm.refresh() }
                 androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
-                    if (useNewUi) ConversationsScreen(
-                        vm = vm,
-                        onOpenConversation = { id, query ->
-                            com.anindra.messages.sms.NotificationHelper
-                                .clearConversationNotification(this@MainActivity, id)
-                            chatId = id
-                            chatSearchQuery = handoffSearchQuery(query)
-                            navRoute = "chat"
-                        },
-                        onNewChat = { navRoute = "new" },
-                        onOpenSettings = { navRoute = "settings" },
-                    ) else com.anindra.messages.ui.legacy.ConversationsScreen(
-                        vm = vm,
-                        onOpenConversation = { id, query ->
-                            com.anindra.messages.sms.NotificationHelper
-                                .clearConversationNotification(this@MainActivity, id)
-                            chatId = id
-                            chatSearchQuery = handoffSearchQuery(query)
-                            navRoute = "chat"
-                        },
-                        onNewChat = { navRoute = "new" },
-                        onOpenSettings = { navRoute = "settings" },
-                    )
-
+                    androidx.compose.foundation.layout.Column(Modifier.fillMaxSize()) {
+                        com.anindra.messages.forwarding.ForwardingBanner(
+                            enabled = forwardingState.config.enabled,
+                            onOpen = { navRoute = "forwarding" },
+                            onStop = { forwardingVm.stop() }
+                        )
+                        androidx.compose.foundation.layout.Box(Modifier.weight(1f)) {
+                            if (useNewUi) ConversationsScreen(
+                                vm = vm,
+                                onOpenConversation = { id, query ->
+                                    com.anindra.messages.sms.NotificationHelper
+                                        .clearConversationNotification(this@MainActivity, id)
+                                    chatId = id
+                                    chatSearchQuery = handoffSearchQuery(query)
+                                    navRoute = "chat"
+                                },
+                                onNewChat = { navRoute = "new" },
+                                onOpenSettings = { navRoute = "settings" },
+                            ) else com.anindra.messages.ui.legacy.ConversationsScreen(
+                                vm = vm,
+                                onOpenConversation = { id, query ->
+                                    com.anindra.messages.sms.NotificationHelper
+                                        .clearConversationNotification(this@MainActivity, id)
+                                    chatId = id
+                                    chatSearchQuery = handoffSearchQuery(query)
+                                    navRoute = "chat"
+                                },
+                                onNewChat = { navRoute = "new" },
+                                onOpenSettings = { navRoute = "settings" },
+                            )
+                        }
+                    }
                     AnimatedContent(
                         targetState = navRoute,
                         transitionSpec = {
@@ -1326,6 +1339,9 @@ class MainActivity : FragmentActivity() {
                                             }
                                         }
                                     )
+                                    "forwarding" -> com.anindra.messages.forwarding.ForwardingScreen(
+                                        vm = forwardingVm, onBack = { navRoute = "settings" }
+                                    )
                                     "settings" -> if (useNewUi) SettingsScreen(
                                         vm = vm,
                                         onBack = { navRoute = "list" },
@@ -1334,6 +1350,7 @@ class MainActivity : FragmentActivity() {
                                         onOpenSpamBlocked = { navRoute = "spam" },
                                         onOpenInbox = { navRoute = "inbox" },
                                         onOpenScheduled = { navRoute = "scheduled" },
+                                        onOpenForwarding = { navRoute = "forwarding" },
                                         scrollState = settingsScroll
                                     ) else com.anindra.messages.ui.legacy.SettingsScreen(
                                         onOpenRoute = { route -> navRoute = route },
@@ -1344,6 +1361,7 @@ class MainActivity : FragmentActivity() {
                                         onOpenAdvanced = { navRoute = "advanced" },
                                         onOpenSpamBlocked = { navRoute = "spam" },
                                         onOpenScheduled = { navRoute = "scheduled" },
+                                        onOpenForwarding = { navRoute = "forwarding" },
                                         scrollState = settingsScroll
                                     )
                                     "inbox" -> InboxSettingsScreen(
@@ -1673,6 +1691,7 @@ onOpenAccessibility = { navRoute = "accessibility" },
         }
         applyPrivacyModeProbe(intent, vm)
         if (intent.getBooleanExtra("open_settings", false)) navRoute = "settings"
+        if (intent.getBooleanExtra("open_forwarding", false)) navRoute = "forwarding"
         intent.getStringExtra("open_conversation_address")?.let {
             pendingOpenAddress = it
             com.anindra.messages.sms.NotificationHelper.clearConversationNotification(
