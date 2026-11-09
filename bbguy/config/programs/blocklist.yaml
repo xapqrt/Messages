@@ -1,0 +1,5 @@
+# Program handles whose policy forbids automated test-account creation or
+# automated registration. Checked before any account attempt. Add handles in
+# lowercase. This list is deliberately separate from the scope revision so that
+# a bad import cannot remove a human veto.
+handles: []

@@ -1,0 +1,9 @@
+# Acme security policy
+
+We welcome reports about our public services. Automated scanning of in-scope
+assets is permitted at a polite rate, and scanners are welcome on the API.
+
+Do not perform denial-of-service testing, credential stuffing, or social
+engineering. Do not test the staging environment; it is out of scope.
+
+Third-party AI tools are not permitted to process data from this program.

@@ -1,0 +1,151 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "acme.example",
+        "asset_type": "domain",
+        "eligible_for_submission": true,
+        "eligible_for_bounty": true,
+        "instruction": null,
+        "max_severity": "critical"
+      }
+    },
+    {
+      "id": 2,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "*.acme.example",
+        "asset_type": "wildcard",
+        "eligible_for_submission": true,
+        "eligible_for_bounty": true,
+        "instruction": null,
+        "max_severity": "critical"
+      }
+    },
+    {
+      "id": 3,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "stg.acme.example",
+        "asset_type": "domain",
+        "eligible_for_submission": false,
+        "eligible_for_bounty": false,
+        "instruction": "Staging. No testing.",
+        "max_severity": null
+      }
+    },
+    {
+      "id": 4,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "*.stg.acme.example",
+        "asset_type": "wildcard",
+        "eligible_for_submission": false,
+        "eligible_for_bounty": false,
+        "instruction": "Staging. No testing.",
+        "max_severity": null
+      }
+    },
+    {
+      "id": 5,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "https://portal.example.net/api/v2/",
+        "asset_type": "url",
+        "eligible_for_submission": true,
+        "eligible_for_bounty": true,
+        "instruction": "Only the v2 API. Do not test the UI.",
+        "max_severity": "high"
+      }
+    },
+    {
+      "id": 6,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "https://portal.example.net/admin/",
+        "asset_type": "url",
+        "eligible_for_submission": false,
+        "eligible_for_bounty": false,
+        "instruction": "Administrative interface, out of scope.",
+        "max_severity": null
+      }
+    },
+    {
+      "id": 7,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "8.8.8.8",
+        "asset_type": "ip_address",
+        "eligible_for_submission": true,
+        "eligible_for_bounty": false,
+        "instruction": null,
+        "max_severity": "medium"
+      }
+    },
+    {
+      "id": 8,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "45.33.0.0/16",
+        "asset_type": "cidr",
+        "eligible_for_submission": true,
+        "eligible_for_bounty": false,
+        "instruction": null,
+        "max_severity": "medium"
+      }
+    },
+    {
+      "id": 9,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "https://github.com/acme/website",
+        "asset_type": "source_code",
+        "eligible_for_submission": true,
+        "eligible_for_bounty": false,
+        "instruction": "Source review only, not deployed.",
+        "max_severity": "low"
+      }
+    },
+    {
+      "id": 10,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "com.acme.app",
+        "asset_type": "android",
+        "eligible_for_submission": true,
+        "eligible_for_bounty": false,
+        "instruction": "APK only.",
+        "max_severity": "medium"
+      }
+    },
+    {
+      "id": 11,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "internal.acme.example",
+        "asset_type": "domain",
+        "eligible_for_submission": false,
+        "eligible_for_bounty": false,
+        "instruction": "Internal only.",
+        "max_severity": null
+      }
+    },
+    {
+      "id": 12,
+      "type": "structured-scope",
+      "attributes": {
+        "asset_identifier": "2001:4860::/32",
+        "asset_type": "cidr",
+        "eligible_for_submission": true,
+        "eligible_for_bounty": false,
+        "instruction": null,
+        "max_severity": "medium"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.hackerone.com/v1/hackers/programs/acme/structured_scopes"
+  }
+}
